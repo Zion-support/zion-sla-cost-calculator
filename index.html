@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zion SLA Breach Cost Calculator</title>
+<meta name="description" content="Calculate the business cost of downtime: SLA credits, revenue impact and customer churn risk by service tier. Free tool by Zion Tech Group.">
+<style>
+:root{--bg:#120d0a;--card:#201712;--acc:#fb923c;--txt:#f9efe6;--mut:#c2a68f}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+header{padding:48px 24px 24px;text-align:center;background:linear-gradient(160deg,#40200c,#120d0a)}
+h1{margin:0 0 8px}.wrap{max-width:920px;margin:0 auto;padding:24px}
+.panel{background:var(--card);border:1px solid #3d2b1c;border-radius:14px;padding:20px;margin-bottom:20px}
+label{display:block;font-size:.85rem;color:var(--mut);margin:12px 0 4px}
+input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #4d3623;background:#1a110b;color:var(--txt)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:700px){.row{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:10px;text-align:right;border-bottom:1px solid #33251a}th:first-child,td:first-child{text-align:left}
+.big{font-size:1.5rem;color:var(--acc);font-weight:700}
+footer{padding:32px 24px;text-align:center;color:var(--mut);font-size:.85rem;border-top:1px solid #2e2115;margin-top:40px}
+footer a{color:var(--acc);text-decoration:none;margin:0 8px}
+</style>
+</head>
+<body>
+<header><h1>⏱️ Zion SLA Breach Cost Calculator</h1>
+<p>What does missing your SLA actually cost? Credits, revenue-at-risk and churn exposure per tier.</p></header>
+<div class="wrap">
+<div class="panel"><div class="row">
+<div><label>SLA target (%)</label><select id="sla"><option value="99.9">99.9% (43.8 min/mo)</option><option value="99.95">99.95% (21.9 min/mo)</option><option value="99.99">99.99% (4.4 min/mo)</option></select></div>
+<div><label>Actual downtime this month (minutes)</label><input id="down" type="number" value="120" min="0"></div>
+<div><label>Customers on this SLA</label><input id="cust" type="number" value="50" min="1"></div>
+<div><label>Avg monthly contract value ($)</label><input id="mcv" type="number" value="2000" min="0"></div>
+<div><label>SLA credit (% of monthly fee, typical)</label><input id="credit" type="number" value="25" min="0" max="100"></div>
+<div><label>Revenue per minute of downtime ($)</label><input id="rpm" type="number" value="500" min="0"></div>
+</div></div>
+<div class="panel" id="out"></div>
+</div>
+<footer>Part of the <a href="https://ziontechgroup.com">Zion Tech Group</a> AI apps network ·
+<a href="https://ziontechgroup.com/slo-calculator/">SLO Calculator</a>
+<a href="https://ziontechgroup.com/zion-ai-postmortem/">Postmortem Generator</a>
+<a href="https://ziontechgroup.com/managed-it-ops/">Zion managed IT ops</a></footer>
+<script>
+function calc(){
+const sla=+document.getElementById('sla').value,down=+document.getElementById('down').value||0,cust=+document.getElementById('cust').value||0,mcv=+document.getElementById('mcv').value||0,credit=(+document.getElementById('credit').value||0)/100,rpm=+document.getElementById('rpm').value||0;
+const allowed=(100-sla)/100*43800;
+const breached=down>allowed;
+const credits=breached?cust*mcv*credit:0;
+const revLoss=down*rpm;
+const churnRisk=breached?cust*0.08*mcv*12:0;
+const total=credits+revLoss+churnRisk;
+document.getElementById('out').innerHTML=`<table><thead><tr><th>Component</th><th>Amount</th></tr></thead><tbody>
+<tr><td>Allowed downtime (${sla}%)</td><td>${allowed.toFixed(1)} min/mo</td></tr>
+<tr><td>Status</td><td style="color:${breached?'#f87171':'#34d399'};font-weight:700">${breached?'SLA BREACHED':'Within SLA'}</td></tr>
+<tr><td>SLA credits owed</td><td>$${credits.toLocaleString(undefined,{maximumFractionDigits:0})}</td></tr>
+<tr><td>Direct revenue impact</td><td>$${revLoss.toLocaleString(undefined,{maximumFractionDigits:0})}</td></tr>
+<tr><td>Churn exposure (est. 8% of affected ACV)</td><td>$${churnRisk.toLocaleString(undefined,{maximumFractionDigits:0})}</td></tr>
+<tr><td><b>Total incident cost</b></td><td class="big">$${total.toLocaleString(undefined,{maximumFractionDigits:0})}</td></tr></tbody></table>`;}
+['sla','down','cust','mcv','credit','rpm'].forEach(id=>document.getElementById(id).addEventListener('input',calc));calc();
+</script>
+</body>
+</html>
